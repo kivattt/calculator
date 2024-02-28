@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <string>
 
 #define CHILDREN vector<ASTNode>
@@ -18,9 +19,7 @@ enum class Type {
 };
 
 struct ASTNode {
-	bool isRootNode = false;
 	Type type;
-
 	double literal;
 	Operation operation;
 
@@ -64,79 +63,40 @@ double performOperation(const ASTNode &node) {
 	return 0;
 }
 
-void printGivenLevel(ASTNode &node, int level) {
-//	double ret = performOperation(node);
+std::stack<ASTNode*> stack;
+double operationed(ASTNode &node) {
+	stack.push(&node);
 
-//	std::cout << "printGivenLevel called with level: " << level << '\n';
-
-/*	if (node.isRootNode)
-		return;*/
-
-	if (level == 1) {
-		std::cout << node.literal << " ";
-		if (node.type != Type::Literal){
-			node.type = Type::Literal;
-			if (performOperation(node) != -6969)
-				node.literal = performOperation(node);
-		}
-	} else if (level > 1){
-		for (ASTNode &child : node.children)
-			printGivenLevel(child, level-1);
+	for (ASTNode &child : node.children){
+		if (child.type == Type::Operation)
+			operationed(child);
 	}
 
-}
+	while (!stack.empty()) {
+		ASTNode *n = stack.top();
 
-int height(const ASTNode &node) {
-/*	if (node.isRootNode)
-		return 0;*/
+		double value = performOperation(*n);
+		n->type = Type::Literal;
+		n->literal = value;
 
-	int maxHeight = 0;
-	for (const ASTNode &child : node.children) {
-		int h = height(child);
-		if (h > maxHeight)
-			maxHeight = h;
+		stack.pop();
 	}
 
-	return maxHeight + 1;
-}
-
-void reverseLevelOrder(ASTNode &root) {
-	int h = height(root);
-	std::cout << "Got height of tree: " << h << '\n';
-	int i;
-	for (i = h; i >= 1; i--){
-		printGivenLevel(root, i);
-	}
-}
-
-double operationed(ASTNode &tree) {
-	for (ASTNode &child : tree.children){
-
-	}
-
-	tree.type = Type::Literal;
-	tree.literal = performOperation(tree);
-
-	return performOperation(tree);
+	return node.literal;
 }
 
 string result(const string &input) {
 	// 1 + 2*3
-	//
-	// add
-	// 1 mul
-	//   2 3
-	//
-	
-	/*ASTNode tree(Type::Operation, Operation::Add, CHILDREN{
+	ASTNode tree(Type::Operation, Operation::Add, CHILDREN{
 		ASTNode(Type::Literal, 1),
 		ASTNode(Type::Operation, Operation::Mul, CHILDREN{
 			ASTNode(Type::Literal, 2), ASTNode(Type::Literal, 3)
 		})
-	});*/
+	});
+	std::cout << "1 + 2 * 3 = " << operationed(tree) << '\n';
 
 	// 69 + 2 * (3 + 3)
-	ASTNode tree(Type::Operation, Operation::Add, CHILDREN{
+	ASTNode tree2(Type::Operation, Operation::Add, CHILDREN{
 		ASTNode(Type::Literal, 69),
 		ASTNode(Type::Operation, Operation::Mul, CHILDREN{
 			ASTNode(Type::Literal, 2), ASTNode(Type::Operation, Operation::Add, CHILDREN{
@@ -144,16 +104,13 @@ string result(const string &input) {
 			})
 		})
 	});
+	std::cout << "69 + 2 * (3 + 3) = " << operationed(tree2) << '\n';
 
-	tree.isRootNode = true;
-	reverseLevelOrder(tree);
-	std::cout << "Result: " << tree.literal << '\n';
-
+	// 2 * 3
 	ASTNode x = ASTNode(Type::Operation, Operation::Mul, CHILDREN{
 		ASTNode(Type::Literal, 2), ASTNode(Type::Literal, 3)
 	});
-
-//	std::cout << "operationed: " << performOperation(x) << '\n';
+	std::cout << "2 * 3 = " << operationed(x) << '\n';
 
 	return "";
 }
