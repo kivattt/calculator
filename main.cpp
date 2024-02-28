@@ -2,6 +2,7 @@
 #include <vector>
 #include <stack>
 #include <string>
+#include <math.h>
 
 #define CHILDREN vector<ASTNode>
 
@@ -10,12 +11,16 @@ using std::vector;
 
 enum class Operation {
 	Add,
-	Mul
+	Sub,
+	Mul,
+	Div,
+	Pow
 };
 
 enum class Type {
 	Literal,
-	Operation // Or function
+	Operation,
+	Function
 };
 
 struct ASTNode {
@@ -55,8 +60,17 @@ double performOperation(const ASTNode &node) {
 		case Operation::Add:
 			return node.children[0].literal + node.children[1].literal;
 			break;
+		case Operation::Sub:
+			return node.children[0].literal - node.children[1].literal;
+			break;
 		case Operation::Mul:
 			return node.children[0].literal * node.children[1].literal;
+			break;
+		case Operation::Div:
+			return node.children[0].literal / node.children[1].literal;
+			break;
+		case Operation::Pow:
+			return std::pow(node.children[0].literal, node.children[1].literal);
 			break;
 	}
 
@@ -64,12 +78,12 @@ double performOperation(const ASTNode &node) {
 }
 
 std::stack<ASTNode*> stack;
-double operationed(ASTNode &node) {
+double evaluateAST(ASTNode &node) {
 	stack.push(&node);
 
 	for (ASTNode &child : node.children){
-		if (child.type == Type::Operation)
-			operationed(child);
+		if (child.type != Type::Literal)
+			evaluateAST(child);
 	}
 
 	while (!stack.empty()) {
@@ -85,6 +99,11 @@ double operationed(ASTNode &node) {
 	return node.literal;
 }
 
+// TODO:
+/*ASTNode parseIntoAST(const string &input) {
+	
+}*/
+
 string result(const string &input) {
 	// 1 + 2*3
 	ASTNode tree(Type::Operation, Operation::Add, CHILDREN{
@@ -93,7 +112,7 @@ string result(const string &input) {
 			ASTNode(Type::Literal, 2), ASTNode(Type::Literal, 3)
 		})
 	});
-	std::cout << "1 + 2 * 3 = " << operationed(tree) << '\n';
+	std::cout << "1 + 2 * 3 = " << evaluateAST(tree) << '\n';
 
 	// 69 + 2 * (3 + 3)
 	ASTNode tree2(Type::Operation, Operation::Add, CHILDREN{
@@ -104,22 +123,27 @@ string result(const string &input) {
 			})
 		})
 	});
-	std::cout << "69 + 2 * (3 + 3) = " << operationed(tree2) << '\n';
+	std::cout << "69 + 2 * (3 + 3) = " << evaluateAST(tree2) << '\n';
 
 	// 2 * 3
 	ASTNode x = ASTNode(Type::Operation, Operation::Mul, CHILDREN{
 		ASTNode(Type::Literal, 2), ASTNode(Type::Literal, 3)
 	});
-	std::cout << "2 * 3 = " << operationed(x) << '\n';
+	std::cout << "2 * 3 = " << evaluateAST(x) << '\n';
+
+	ASTNode y = ASTNode(Type::Operation, Operation::Pow, CHILDREN{
+		ASTNode(Type::Literal, 2), ASTNode(Type::Literal, 10)
+	});
+	std::cout << "2 ^ 10 = " << evaluateAST(y) << '\n';
 
 	return "";
 }
 
 int main() {
-	std::cout << "Input: ";
+//	std::cout << "Input: ";
 
 	string input;
-	std::getline(std::cin, input);
+//	std::getline(std::cin, input);
 
 	std::cout << result(input) << '\n';
 }
